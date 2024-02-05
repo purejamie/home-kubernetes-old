@@ -94,13 +94,13 @@ spec:
           hajimari.io/enable: "true"
           hajimari.io/icon: mdi:database-outline
         hosts:
-          - host: &host "{{ .Release.Name }}.bakernet.casa"
+          - host: &host "minio.${SECRET_DOMAIN}"
             paths:
               - path: /
                 service:
                   name: main
                   port: http
-          - host: &s3Host s3.bakernet.casa
+          - host: &s3Host s3.${SECRET_DOMAIN}
             paths:
               - path: /
                 service:
