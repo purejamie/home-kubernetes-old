@@ -34,12 +34,7 @@ spec:
       annotations:
         hajimari.io/icon: mdi:kubernetes
       hosts:
-        - host: &host "kubernetes.${SECRET_DOMAIN}"
-          paths:
-            - path: /
-              service:
-                name: main
-                port: http
+        - &host "kubernetes.${SECRET_DOMAIN}"
       tls:
         - hosts:
             - *host
