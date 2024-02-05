@@ -8,4 +8,4 @@ resources:
   # Flux-Kustomizations
   - ./plex/ks.yaml
   - ./overseerr/ks.yaml
-  # - ./immich/ks.yaml
+  - ./immich/ks.yaml
