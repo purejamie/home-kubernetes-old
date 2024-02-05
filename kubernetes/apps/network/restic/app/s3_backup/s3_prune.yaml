@@ -27,7 +27,7 @@ spec:
     keepHistory: false
   dependsOn:
     - name: restic-s3
-      namespace: networking
+      namespace: network
   values:
     controllers:
       main:

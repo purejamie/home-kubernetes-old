@@ -27,7 +27,7 @@ spec:
     keepHistory: false
   dependsOn:
     - name: restic-pvc
-      namespace: networking
+      namespace: network
   values:
     controllers:
       main:
