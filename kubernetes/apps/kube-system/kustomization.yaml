@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ./namespace.yaml
   - ./cilium/ks.yaml
+  - ./local-path-provisioner.yaml
   - ./metrics-server/ks.yaml
   - ./nfs-subdir-external/ks.yaml
   - ./reloader/ks.yaml
