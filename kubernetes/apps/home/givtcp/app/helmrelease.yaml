@@ -1,0 +1,86 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: givtcp
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.4.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: britkat/giv_tcp-ma
+              tag: latest
+            env:
+              NUMINVERTORS: 1
+              INVERTOR_IP_1: 192.168.3.10
+              NUMBATTERIES_1: 2
+              HA_AUTO_D: 'True'
+              MQTT_OUTPUT: 'True'
+              MQTT_ADDRESS: 10.0.0.12
+              LOG_LEVEL: Debug
+              TZ: Europe/London
+            probes:
+              liveness: &probes
+                enabled: false
+              readiness: *probes
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128M
+              limits:
+                memory: 256M
+    service:
+      main:
+        ports:
+          http:
+            port: 6345
+
+    ingress:
+      main:
+        enabled: true
+        className: internal
+        annotations:
+          hajimari.io/enable: "false"
+        hosts:
+          - host: &host "{{ .Release.Name }}.bakernet.casa"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+
+
+
+---
