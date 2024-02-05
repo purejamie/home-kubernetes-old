@@ -6,5 +6,5 @@ resources:
   # - ./mealie/ks.yaml
   - ./mosquitto/ks.yaml
   - ./givtcp/ks.yaml
-  # - ./home-assistant/ks.yaml
+  - ./home-assistant/ks.yaml
   # - ./homebridge/ks.yaml
