@@ -1,0 +1,106 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: homebridge
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.4.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 3
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    defaultPodOptions:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+    controllers:
+      main:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: homebridge/homebridge
+              tag: "2023-11-28"
+            env:
+              TZ: Europe/London
+              ENABLE_AVAHI: "1"
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 8581
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 2
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 10m
+                memory: 100Mi
+              limits:
+                memory: 750Mi
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+    ingress:
+      main:
+        enabled: true
+        className: internal
+        annotations:
+          hajimari.io/enable: "true"
+          hajimari.io/group: "Home"
+        hosts:
+          - host:  &host "{{ .Release.Name }}.bakernet.casa"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+    configMaps:
+      config:
+        enabled: true
+        nameOverride: startup-sh
+        data:
+          startup.sh: |-
+            #!/bin/sh
+            npm install --save homebridge-dummy@latest
+            npm install --save -g homebridge-unifi-protect@latest
+    persistence:
+      homebridge:
+        enabled: true
+        existingClaim: homebridge-config
+      startup-sh:
+        enabled: true
+        type: configMap
+        name: homebridge-startup-sh
+        globalMounts:
+          - path: /homebridge/startup.sh
+            subPath: startup.sh
+            defaultMode: 493

@@ -7,4 +7,4 @@ resources:
   - ./mosquitto/ks.yaml
   - ./givtcp/ks.yaml
   - ./home-assistant/ks.yaml
-  # - ./homebridge/ks.yaml
+  - ./homebridge/ks.yaml
