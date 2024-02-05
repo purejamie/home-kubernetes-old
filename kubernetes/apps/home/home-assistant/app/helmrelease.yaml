@@ -43,6 +43,16 @@ spec:
             envFrom: &envFrom
               - secretRef:
                   name: home-assistant-secret
+
+        defaultPodOptions:
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: home-assistant
+                  topologyKey: "kubernetes.io/hostname"
+
         containers:
           main:
             image:
