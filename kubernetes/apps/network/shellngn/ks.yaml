@@ -13,7 +13,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 5m
-  path: "./kubernetes/apps/networking/shellngn/app"
+  path: "./kubernetes/apps/network/shellngn/app"
   prune: true
   sourceRef:
     kind: GitRepository
