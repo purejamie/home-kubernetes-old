@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "homecluster",
+      "Group": "Servers",
+      "Host": "homecluster-rw.database.svc.cluster.local",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "SSLMode": "prefer",
+      "Username": "postgres"
+    }
+  }
+}
