@@ -1,0 +1,79 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: healthchecks
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: lscr.io/linuxserver/healthchecks
+              tag: latest
+            env:
+              REGENERATE_SETTINGS: true
+              REGISTRATION_OPEN: "False"
+              SITE_ROOT: "https://healthchecks.${SECRET_DOMAIN}"
+              TZ: Europe/London
+            envFrom:
+              - secretRef:
+                  name: healthchecks-secret
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128M
+              limits:
+                memory: 1Gi
+    service:
+      main:
+        ports:
+          http:
+            port: 8000
+    ingress:
+      main:
+        enabled: true
+        className: internal
+        annotations:
+          hajimari.io/enable: "true"
+          hajimari.io/group: "Monitoring"
+          hajimari.io/icon: mdi:tag-search
+        hosts:
+          - host: &host "{{ .Release.Name }}.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+    persistence:
+      config:
+        enabled: true
+        existingClaim: healthchecks-config
+      tmp:
+        type: emptyDir
