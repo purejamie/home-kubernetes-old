@@ -5,4 +5,5 @@ resources:
   - ./namespace.yaml
   - ./cilium/ks.yaml
   - ./metrics-server/ks.yaml
+  - ./nfs-subdir-external/ks.yaml
   - ./reloader/ks.yaml

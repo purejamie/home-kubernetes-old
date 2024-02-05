@@ -9,5 +9,6 @@ resources:
   - ./k8s-gateway.yaml
   - ./jetstack.yaml
   - ./metrics-server.yaml
+  - ./nfs-subdir-external-provisioner-charts.yaml
   - ./openebs.yaml
   - ./stakater.yaml
