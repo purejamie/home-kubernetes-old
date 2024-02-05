@@ -36,7 +36,7 @@ spec:
     keepHistory: false
   dependsOn:
     - name: restic-nas
-      namespace: networking
+      namespace: network
   values:
     controllers:
       main:
