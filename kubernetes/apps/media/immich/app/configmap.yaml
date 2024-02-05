@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: immich-configmap
+data:
+  IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning.media.svc.cluster.local:3003
+  IMMICH_SERVER_URL: http://immich-server.media.svc.cluster.local:3001
+  LOG_LEVEL: verbose
+  REDIS_HOSTNAME: immich-redis.media.svc.cluster.local
+  REDIS_PORT: "6379"
+  TRANSFORMERS_CACHE: /usr/src/app/.transformers_cache
+  IMMICH_MEDIA_LOCATION: /usr/src/app/immich
+  EXTERNAL_PATH: /usr/src/app/upload/legacy
+

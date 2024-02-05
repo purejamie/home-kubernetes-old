@@ -1,0 +1,107 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: &app immich-microservices
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.5.0
+      interval: 30m
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    createNamespace: true
+    remediation:
+      retries: 4
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    - name: immich-server
+  values:
+    defaultPodOptions:
+      enableServiceLinks: false
+      nodeSelector:
+        intel.feature.node.kubernetes.io/gpu: "true"
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: *app
+    controllers:
+      main:
+        strategy: RollingUpdate
+        annotations:
+          configmap.reloader.stakater.com/reload: &configMap immich-configmap
+          secret.reloader.stakater.com/reload: &secret immich-secret
+        containers:
+          main:
+            image:
+              repository: ghcr.io/immich-app/immich-server
+              tag: v1.94.1@sha256:c7b80752d48464dea1c4495ff810365a0809d89c2ac219547d3c1aed81c6411f
+            args:
+              - start-microservices.sh
+            envFrom:
+              - configMapRef:
+                  name: *configMap
+              - secretRef:
+                  name: *secret
+            resources:
+              requests:
+                gpu.intel.com/i915: 1
+                cpu: 100m
+                memory: 1000Mi
+              limits:
+                gpu.intel.com/i915: 1
+                memory: 6000Mi
+    service:
+      main:
+        enabled: false
+    persistence:
+      library:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/pictures/library
+        globalMounts:
+          - path: /usr/src/app/immich/library
+      legacy:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/pictures/
+        globalMounts:
+          - path: /usr/src/app/upload
+      immich-media:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/fast_disk/kubes/media/immich_files
+        globalMounts:
+          - path: /usr/src/app/immich
+      geocoding-dump:
+        type: emptyDir
+        globalMounts:
+          - path: /usr/src/app/.reverse-geocoding-dump
+      geoname-dump:
+        type: emptyDir
+        globalMounts:
+          - path: /usr/src/app/node_modules/local-reverse-geocoder/geonames_dump
+      transformers-cache:
+        type: emptyDir
+        globalMounts:
+          - path: /usr/src/app/.transformers_cache

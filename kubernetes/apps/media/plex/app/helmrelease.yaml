@@ -1,0 +1,168 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: plex
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.5.0
+      sourceRef:
+        kind: HelmRepository
+        name: bjw-s
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  dependsOn:
+    - name: intel-device-plugin-gpu
+      namespace: tools
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: ghcr.io/onedr0p/plex
+              tag: 1.32.8.7639-fb6452ebf@sha256:637fe10cef736f249d96cb004c12f81646c81ca17ddce22374ea8782aa6646c2
+            env:
+              TZ: Europe/London
+              PLEX_CLAIM: "claim-57XBLmV9zSMUYN6FikZx"
+              PLEX_PREFERENCE_1: "FriendlyName=BakernetPlex"
+              ADVERTISE_IP: "https://plex.${SECRET_DOMAIN},http://10.0.1.51:32400"
+              ALLOWED_NETWORKS: "10.0.0.0/22,10.42.0.0/16,10.43.0.0/16"
+
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /identity
+                    port: 32400
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: false
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                gpu.intel.com/i915: 1
+              limits:
+                gpu.intel.com/i915: 1
+                memory: 12Gi
+        pod:
+          nodeSelector:
+            intel.feature.node.kubernetes.io/gpu: "true"
+          securityContext:
+            runAsUser: 568
+            runAsGroup: 568
+            runAsNonRoot: true
+            fsGroup: 568
+            fsGroupChangePolicy: OnRootMismatch
+            supplementalGroups: [44, 105, 10000]
+    service:
+      main:
+        type: LoadBalancer
+        annotations:
+          io.cilium/lb-ipam-ips: 10.0.1.51
+        ports:
+          http:
+            port: 32400
+          dnla-tcp:
+            enabled: true
+            port: 32469
+            protocol: TCP
+          dnla-udp:
+            enabled: true
+            port: 1900
+            protocol: UDP
+          # GDM Network discovery
+          # https://support.plex.tv/articles/200430283-network/
+          gdm-1-udp:
+            enabled: true
+            port: 32410
+            protocol: UDP
+          gdm-2-udp:
+            enabled: true
+            port: 32412
+            protocol: UDP
+          gdm-3-udp:
+            enabled: true
+            port: 32413
+            protocol: UDP
+          gdm-4-udp:
+            enabled: true
+            port: 32414
+            protocol: UDP
+    ingress:
+      main:
+        enabled: true
+        className: external
+        annotations:
+          external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
+          hajimari.io/icon: mdi:animation-play
+          # nginx.ingress.kubernetes.io/backend-protocol: HTTPS #(works if 'prefer' https is enabled in plex setup)
+        hosts:
+          - host: &host "{{ .Release.Name }}.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                service:
+                  name: main
+                  port: http
+        tls:
+          - hosts:
+              - *host
+    persistence:
+      config:
+        enabled: true
+        existingClaim: plex-config
+      tmp:
+        type: emptyDir
+      transcode:
+        type: emptyDir
+      tv:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/tv
+        globalMounts:
+          - path: /tv
+            readOnly: true
+      films:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/films
+        globalMounts:
+          - path: /films
+            readOnly: true
+      pictures:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/pictures
+        globalMounts:
+          - path: /pictures
+            readOnly: true
+      music:
+        type: nfs
+        server: 10.0.0.5
+        path: /mnt/sata_16tb/music
+        globalMounts:
+          - path: /music
+            readOnly: true
