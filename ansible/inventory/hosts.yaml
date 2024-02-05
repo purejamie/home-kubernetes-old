@@ -1,0 +1,14 @@
+---
+kubernetes:
+  children:
+    controllers:
+      hosts:
+        "bakerkubes1":
+          ansible_user: "jamie"
+          ansible_host: "10.0.1.1"
+        "bakerkubes2":
+          ansible_user: "jamie"
+          ansible_host: "10.0.1.2"
+        "bakerkubes3":
+          ansible_user: "jamie"
+          ansible_host: "10.0.1.3"
