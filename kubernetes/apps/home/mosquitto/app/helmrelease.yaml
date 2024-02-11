@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: app-template
-      version: 2.4.0
+      version: 2.5.0
       sourceRef:
         kind: HelmRepository
         name: bjw-s
@@ -24,9 +24,9 @@ spec:
   uninstall:
     keepHistory: false
   values:
-    defaultPodOptions:
-        dnsPolicy: ClusterFirstWithHostNet
-        hostNetwork: true
+    # defaultPodOptions:
+    #     dnsPolicy: ClusterFirstWithHostNet
+    #     hostNetwork: true
     controllers:
       main:
         annotations:
@@ -34,14 +34,18 @@ spec:
         containers:
           main:
             image:
-              repository: docker.io/library/eclipse-mosquitto
-              tag: latest
+              repository: public.ecr.aws/docker/library/eclipse-mosquitto
+              tag: 2.0.18
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
             resources:
               requests:
                 cpu: 5m
                 memory: 4Mi
               limits:
-                memory: 32Mi
+                memory: 16Mi
         pod:
           securityContext:
             runAsUser: 568
@@ -53,7 +57,7 @@ spec:
       main:
         type: LoadBalancer
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: mosquitto.bakernet.casa
+          external-dns.alpha.kubernetes.io/hostname: mosquitto.${SECRET_DOMAIN}
           io.cilium/lb-ipam-ips: 10.0.0.12
         ports:
           http:
