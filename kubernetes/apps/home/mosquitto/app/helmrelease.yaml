@@ -35,17 +35,13 @@ spec:
           main:
             image:
               repository: docker.io/library/eclipse-mosquitto
-              tag: 2.0.18@sha256:fa9822d3e9bdb12c80f6cb7ddd22922b26c1cd4ffa071815242ac156f9559d7d
-            securityContext:
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
-              capabilities: { drop: ["ALL"] }
+              tag: latest
             resources:
               requests:
                 cpu: 5m
                 memory: 4Mi
               limits:
-                memory: 16Mi
+                memory: 32Mi
         pod:
           securityContext:
             runAsUser: 568
