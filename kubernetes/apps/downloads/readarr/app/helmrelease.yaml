@@ -41,7 +41,7 @@ spec:
           main:
             image:
               repository: ghcr.io/onedr0p/readarr-develop
-              tag: 0.3.13.2338@sha256:bf8a16b7fb4c17499f8de4c0c71a044e140e90d9c00904d751c1a46470a99033
+              tag: 0.3.18.2411@sha256:a1d9eb2001d499322e00876106a675c36b6f750cd253843595bb8e022a54f37a
             env:
               COMPlus_EnableDiagnostics: "0"
               READARR__AUTHENTICATION_METHOD: None
