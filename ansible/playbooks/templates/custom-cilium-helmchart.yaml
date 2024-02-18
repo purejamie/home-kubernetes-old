@@ -13,8 +13,10 @@ spec:
   bootstrap: true
   valuesContent: |-
     autoDirectNodeRoutes: true
+    bgpControlPlane:
+      enabled: true
     bpf:
-      masquerade: true
+      masquerade: false
     cluster:
       name: home-kubernetes
       id: 1
