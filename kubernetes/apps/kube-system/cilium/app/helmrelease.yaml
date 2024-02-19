@@ -38,7 +38,7 @@ spec:
       name: home-kubernetes
     containerRuntime:
       integration: containerd
-    devices: enp+
+    # devices: enp+
     enableRuntimeDeviceDetection: true
     endpointRoutes:
       enabled: true
