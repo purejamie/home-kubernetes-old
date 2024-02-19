@@ -23,16 +23,10 @@ spec:
       - name: authentik-web-files
         persistentVolumeClaim:
           claimName: authentik-config
-      - name: custom-css
-        configMap:
-          name: authentik-custom-css
 
     volumeMounts:
       - name: authentik-web-files
         mountPath: /web
-      - name: custom-css
-        mountPath: /web/dist/custom.css
-        subPath: custom.css
 
     initContainers:
       init-db:
