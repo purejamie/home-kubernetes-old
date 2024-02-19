@@ -1,0 +1,105 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2beta2.json
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: authentik
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: authentik
+      version: 2023.10.7
+      sourceRef:
+        kind: HelmRepository
+        name: authentik-charts
+        namespace: flux-system
+      interval: 5m
+  dependsOn:
+    - name: authentik-redis
+      namespace: security
+  values:
+    volumes:
+      - name: authentik-web-files
+        persistentVolumeClaim:
+          claimName: authentik-config
+
+    volumeMounts:
+      - name: authentik-web-files
+        mountPath: /web
+
+    initContainers:
+      init-db:
+        image: ghcr.io/onedr0p/postgres-init:16
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: authentik-secret
+    podAnnotations:
+      secret.reloader.stakater.com/reload: authentik-secret
+    autoscaling:
+      server:
+        enabled: true
+      worker:
+        enabled: true
+    strategy:
+      type: RollingUpdate
+    worker:
+      strategy:
+        type: RollingUpdate
+
+    livenessProbe:
+      # -- enables or disables the livenessProbe
+      enabled: true
+      httpGet:
+        # -- liveness probe url path
+        path: /-/health/live/
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /-/health/ready/
+        port: http
+      periodSeconds: 10
+
+
+    ingress:
+      enabled: true
+      ingressClassName: external
+      annotations:
+        # gethomepage.dev/enabled: "true"
+        # gethomepage.dev/icon: authentik.png
+        # gethomepage.dev/name: Authentik
+        # gethomepage.dev/group: Infrastructure
+        # gethomepage.dev/widget.type: authentik
+        # gethomepage.dev/widget.url: https://authentik.${SECRET_DOMAIN}
+        # gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_AUTHENTIK_TOKEN}}"
+        external-dns.alpha.kubernetes.io/target: external.${SECRET_DOMAIN}
+      hosts:
+        - host: &host authentik.${SECRET_DOMAIN}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - hosts:
+            - *host
+          secretName: *host
+
+
+    envFrom:
+      - secretRef:
+          name: authentik-secret
+    postgresql:
+      enabled: false
+    redis:
+      enabled: false
+    geoip:
+      enabled: false
+    prometheus:
+      rules:
+        create: true
+      serviceMonitor:
+        create: true
