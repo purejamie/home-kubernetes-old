@@ -24,9 +24,8 @@ spec:
     keepHistory: false
   values:
     autoDirectNodeRoutes: true
-
     bgpControlPlane:
-      enabled: false
+      enabled: true
     bpf:
       masquerade: false
     cgroup:
